@@ -4,7 +4,7 @@ import requests
 from io import BytesIO
 from datetime import datetime
 
-API_URL = 'https://klapmtthpjirofgakk5cuw.streamlit.app/'
+API_URL = 'https://klapmtthpjirofgakk5cuw.streamlit.app'
 
 # Функция для получения данных о товарах с вашего FastAPI сервера
 def fetch_products(store=None, provider=None):
