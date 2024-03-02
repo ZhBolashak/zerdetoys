@@ -31,22 +31,23 @@ def fetch_products(store=None, provider=None):
 
 
 # Функции для получения магазинов и провайдеров
-def fetch_stores():
+def fetch_stores(api_url):
     try:
-        response = requests.get(f'{API_URL}/api/v1/stores')
-        response.raise_for_status()  # Поднимет исключение для кодов состояния 4xx/5xx
+        response = requests.get(f'{api_url}/api/v1/stores')
+        response.raise_for_status()  # Will raise HTTPError for bad requests (4xx or 5xx)
         return response.json()
-    except requests.HTTPError as http_err:
+    except requests.exceptions.HTTPError as http_err:
         st.error(f"HTTP error occurred: {http_err}")  # HTTP error
     except Exception as err:
         st.error(f"Other error occurred: {err}")  # Other errors
-    return []  # Вернуть пустой список в случае ошибки
+    return []  # Return an empty list in case of error
 
-def fetch_providers():
+
+def fetch_providers(api_url):
     try:
         response = requests.get(f'{API_URL}/api/v1/providers')
         response.raise_for_status()  # Поднимет исключение для кодов состояния 4xx/5xx
-        return response.json()
+        return response.exceptions.json()
     except requests.HTTPError as http_err:
         st.error(f"HTTP error occurred: {http_err}")  # HTTP error
     except Exception as err:
