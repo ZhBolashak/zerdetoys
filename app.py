@@ -47,12 +47,13 @@ def fetch_providers(api_url):
     try:
         response = requests.get(f'{API_URL}/api/v1/providers')
         response.raise_for_status()  # Поднимет исключение для кодов состояния 4xx/5xx
-        return response.exceptions.json()
-    except requests.HTTPError as http_err:
+        return response.json()  # Исправлено здесь
+    except requests.exceptions.HTTPError as http_err:
         st.error(f"HTTP error occurred: {http_err}")  # HTTP error
     except Exception as err:
         st.error(f"Other error occurred: {err}")  # Other errors
     return []  # Вернуть пустой список в случае ошибки
+
 
 
 
