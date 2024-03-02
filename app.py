@@ -4,7 +4,7 @@ import requests
 from io import BytesIO
 from datetime import datetime
 
-
+API_URL = 'https://klapmtthpjirofgakk5cuw.streamlit.app/'
 
 # Функция для получения данных о товарах с вашего FastAPI сервера
 def fetch_products(store=None, provider=None):
@@ -13,7 +13,7 @@ def fetch_products(store=None, provider=None):
         'store': store,
         'provider': provider
     }
-    response = requests.post('http://localhost:8000/api/v1/products/', json=params)
+    response = requests.post(f'{API_URL}/api/v1/products/', json=params)
     if response.status_code == 200:
         return response.json()
     else:
@@ -22,11 +22,11 @@ def fetch_products(store=None, provider=None):
 
 # Функции для получения магазинов и провайдеров
 def fetch_stores():
-    response = requests.get('http://localhost:8000/api/v1/stores')
+    response = requests.get(f'{API_URL}/api/v1/stores')
     return response.json() if response.status_code == 200 else []
 
 def fetch_providers():
-    response = requests.get('http://localhost:8000/api/v1/providers')
+    response = requests.get(f'{API_URL}/api/v1/providers')
     return response.json() if response.status_code == 200 else []
 
 
