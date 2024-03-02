@@ -64,7 +64,7 @@ class Provider(BaseModel):
     name: Optional[str]  
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 @product_balance_router.get("/providers", response_model=List[Provider])
@@ -83,7 +83,7 @@ class Store(BaseModel):
     name: Optional[str]  
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 @product_balance_router.get("/stores", response_model=List[Store])
