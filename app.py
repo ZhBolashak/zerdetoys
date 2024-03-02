@@ -22,12 +22,27 @@ def fetch_products(store=None, provider=None):
 
 # Функции для получения магазинов и провайдеров
 def fetch_stores():
-    response = requests.get(f'{API_URL}/api/v1/stores')
-    return response.json() if response.status_code == 200 else []
+    try:
+        response = requests.get(f'{API_URL}/api/v1/stores')
+        response.raise_for_status()  # Поднимет исключение для кодов состояния 4xx/5xx
+        return response.json()
+    except requests.HTTPError as http_err:
+        st.error(f"HTTP error occurred: {http_err}")  # HTTP error
+    except Exception as err:
+        st.error(f"Other error occurred: {err}")  # Other errors
+    return []  # Вернуть пустой список в случае ошибки
 
 def fetch_providers():
-    response = requests.get(f'{API_URL}/api/v1/providers')
-    return response.json() if response.status_code == 200 else []
+    try:
+        response = requests.get(f'{API_URL}/api/v1/providers')
+        response.raise_for_status()  # Поднимет исключение для кодов состояния 4xx/5xx
+        return response.json()
+    except requests.HTTPError as http_err:
+        st.error(f"HTTP error occurred: {http_err}")  # HTTP error
+    except Exception as err:
+        st.error(f"Other error occurred: {err}")  # Other errors
+    return []  # Вернуть пустой список в случае ошибки
+
 
 
 # Получение данных для фильтров
