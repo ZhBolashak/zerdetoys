@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import Depends, HTTPException, APIRouter
 from typing import List, Optional
 from database import get_db  ,Session
+from fastapi.logger import logger as fastapi_logger
 
 
 product_balance_router = APIRouter()
@@ -94,4 +95,5 @@ def get_stores(db: Session = Depends(get_db)):
         # Преобразование результатов в список словарей
         return [{"id": id, "name": name} for id, name in store]
     except Exception as e:
+        fastapi_logger.error(f"Error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
