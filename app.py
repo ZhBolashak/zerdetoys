@@ -13,12 +13,22 @@ def fetch_products(store=None, provider=None):
         'store': store,
         'provider': provider
     }
-    response = requests.post(f'{API_URL}/api/v1/products/', json=params)
-    if response.status_code == 200:
+    try:
+        response = requests.post(f'{API_URL}/api/v1/products/', json=params)
+        response.raise_for_status()  # Это вызовет исключение для кодов состояния 4xx/5xx
         return response.json()
-    else:
-        st.error(f'Ошибка получения данных: {response.status_code}')
-        return []
+    except requests.exceptions.HTTPError as http_err:
+        st.error(f"HTTP error occurred: {http_err}")  # HTTP error
+    except requests.exceptions.ConnectionError as conn_err:
+        st.error(f"Error connecting to the API: {conn_err}")
+    except requests.exceptions.Timeout as timeout_err:
+        st.error(f"Timeout error with the API: {timeout_err}")
+    except requests.exceptions.RequestException as req_err:
+        st.error(f"API request error: {req_err}")
+    except Exception as err:
+        st.error(f"Other error occurred: {err}")  # Other errors
+    return []  # Вернуть пустой список в случае ошибки
+
 
 # Функции для получения магазинов и провайдеров
 def fetch_stores():
