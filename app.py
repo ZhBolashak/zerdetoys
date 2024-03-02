@@ -4,7 +4,7 @@ import requests
 from io import BytesIO
 from datetime import datetime
 
-API_URL = 'http://192.168.1.103:8501'
+API_URL = 'http://localhost:8501'
 
 # Функция для получения данных о товарах с вашего FastAPI сервера
 def fetch_products(store=None, provider=None):
