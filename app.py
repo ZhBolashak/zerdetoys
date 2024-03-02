@@ -57,8 +57,8 @@ def fetch_providers(api_url):
 
 
 # Получение данных для фильтров
-stores = fetch_stores()
-providers = fetch_providers()
+stores = fetch_stores(API_URL)
+providers = fetch_providers(API_URL)
 
 # Списки имен магазинов и провайдеров для выпадающих списков
 store_names = [store['name'] for store in stores]
