@@ -1,11 +1,10 @@
 from pydantic import BaseModel, HttpUrl
 from typing import Optional
-from fastapi import FastAPI, Depends, HTTPException,APIRouter
+from fastapi import Depends, HTTPException, APIRouter
 from typing import List, Optional
 from database import get_db  ,Session
 
 
-app = FastAPI()
 product_balance_router = APIRouter()
 
 #----------------------Список товара через фильтр-------------------------------------------------------
@@ -19,7 +18,7 @@ class ProductInfo(BaseModel):
     картинка: Optional[HttpUrl] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 
