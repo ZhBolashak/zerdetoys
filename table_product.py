@@ -3,7 +3,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import requests
 
-BASE_URL = 'http://127.0.0.1:8000'  # Определяем базовый URL как глобальную переменную
+BASE_URL = 'http://77.243.81.124'  # Определяем базовый URL как глобальную переменную
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
