@@ -3,8 +3,8 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import requests
 import validators  # Убедитесь, что установили пакет validators
+from config import BASE_URL
 
-BASE_URL = 'http://77.243.81.124:8001'  # Определяем базовый URL как глобальную переменную
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
