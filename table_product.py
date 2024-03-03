@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 import validators  # Убедитесь, что установили пакет validators
 
-BASE_URL = 'http://77.243.81.124:8000'  # Определяем базовый URL как глобальную переменную
+BASE_URL = 'http://77.243.81.124:8001'  # Определяем базовый URL как глобальную переменную
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
