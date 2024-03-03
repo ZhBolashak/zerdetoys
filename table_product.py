@@ -4,6 +4,7 @@ import pandas as pd
 import requests
 import validators  # Убедитесь, что установили пакет validators
 from config import BASE_URL
+from urllib.parse import quote
 
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -74,9 +75,11 @@ def update_table(n_clicks, selected_stores, selected_providers):
 
     # Обновляем столбец 'картинка' для отображения изображений
     def generate_image_html(url):
-    # Проверяем валидность URL
-        if validators.url(url):
-            return html.Img(src=url, style={'max-height': '60px', 'max-width': '60px'})
+        # Кодируем URL, чтобы корректно обрабатывать пробелы и другие специальные символы
+        encoded_url = quote(url, safe=':/')
+        # Проверяем валидность URL
+        if validators.url(encoded_url):
+            return html.Img(src=encoded_url, style={'max-height': '60px', 'max-width': '60px'})
         return ""  # Возвращаем пустое значение для невалидных URL
     products_df['картинка'] = products_df['картинка'].apply(generate_image_html)
 
