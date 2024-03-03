@@ -1,12 +1,13 @@
 from pydantic import BaseModel, HttpUrl
 from typing import Optional
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import FastAPI, Depends, HTTPException,APIRouter
 from typing import List, Optional
 from database import get_db  ,Session
-from fastapi.logger import logger as fastapi_logger
 
-
+app = FastAPI()
 product_balance_router = APIRouter()
+
+
 
 #----------------------Список товара через фильтр-------------------------------------------------------
 class ProductInfo(BaseModel):
@@ -19,7 +20,7 @@ class ProductInfo(BaseModel):
     картинка: Optional[HttpUrl] = None
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 
@@ -65,7 +66,7 @@ class Provider(BaseModel):
     name: Optional[str]  
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 @product_balance_router.get("/providers", response_model=List[Provider])
@@ -84,7 +85,7 @@ class Store(BaseModel):
     name: Optional[str]  
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 @product_balance_router.get("/stores", response_model=List[Store])
@@ -95,5 +96,4 @@ def get_stores(db: Session = Depends(get_db)):
         # Преобразование результатов в список словарей
         return [{"id": id, "name": name} for id, name in store]
     except Exception as e:
-        fastapi_logger.error(f"Error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
