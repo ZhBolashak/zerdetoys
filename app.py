@@ -4,7 +4,7 @@ import requests
 from io import BytesIO
 from datetime import datetime
 
-API_URL = 'http://localhost:8501'
+API_URL = 'http://localhost:8000'
 
 # Функция для получения данных о товарах с вашего FastAPI сервера
 def fetch_products(store=None, provider=None):
@@ -13,129 +13,79 @@ def fetch_products(store=None, provider=None):
         'store': store,
         'provider': provider
     }
-    try:
-        response = requests.post(f'{API_URL}/api/v1/products/', json=params)
-        response.raise_for_status()  # Это вызовет исключение для кодов состояния 4xx/5xx
+    response = requests.post(f'{API_URL}/api/v1/products/', json=params)
+    if response.status_code == 200:
         return response.json()
-    except requests.exceptions.HTTPError as http_err:
-        st.error(f"HTTP error occurred: {http_err}")  # HTTP error
-    except requests.exceptions.ConnectionError as conn_err:
-        st.error(f"Error connecting to the API: {conn_err}")
-    except requests.exceptions.Timeout as timeout_err:
-        st.error(f"Timeout error with the API: {timeout_err}")
-    except requests.exceptions.RequestException as req_err:
-        st.error(f"API request error: {req_err}")
-    except Exception as err:
-        st.error(f"Other error occurred: {err}")  # Other errors
-    return []  # Вернуть пустой список в случае ошибки
-
+    else:
+        st.error(f'Ошибка получения данных: {response.status_code}')
+        return []
 
 # Функции для получения магазинов и провайдеров
-def fetch_stores(api_url):
-    try:
-        response = requests.get(f'{api_url}/api/v1/stores')
-        response.raise_for_status()  # Will raise HTTPError for bad requests (4xx or 5xx)
-        return response.json()
-    except requests.exceptions.HTTPError as http_err:
-        st.error(f"HTTP error occurred: {http_err}")  # HTTP error
-    except Exception as err:
-        st.error(f"Other error occurred: {err}")  # Other errors
-    return []  # Return an empty list in case of error
+def fetch_stores():
+    response = requests.get(f'{API_URL}/api/v1/stores')
+    return response.json() if response.status_code == 200 else []
 
-
-def fetch_providers(api_url):
-    try:
-        response = requests.get(f'{API_URL}/api/v1/providers')
-        response.raise_for_status()  # Поднимет исключение для кодов состояния 4xx/5xx
-        return response.json()  # Исправлено здесь
-    except requests.exceptions.HTTPError as http_err:
-        st.error(f"HTTP error occurred: {http_err}")  # HTTP error
-    except Exception as err:
-        st.error(f"Other error occurred: {err}")  # Other errors
-    return []  # Вернуть пустой список в случае ошибки
+def fetch_providers():
+    response = requests.get(f'{API_URL}/api/v1/providers')
+    return response.json() if response.status_code == 200 else []
 
 
 
 
-# Получение данных для фильтров
-stores = fetch_stores(API_URL)
-providers = fetch_providers(API_URL)
+# Предполагается, что функции fetch_stores, fetch_providers, и fetch_products уже определены
 
-# Списки имен магазинов и провайдеров для выпадающих списков
-store_names = [store['name'] for store in stores]
-provider_names = [provider['name'] for provider in providers]
+def format_filename(providers):
+    # Получаем текущую дату
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    # Формируем имя файла
+    file_name = f"{date_str}_{'_'.join(providers) if providers else 'all_providers'}_zerde.xlsx"
+    return file_name
 
-# Создание выпадающих списков фильтров в Streamlit
-store_filter = st.sidebar.multiselect('Магазин', store_names)
-provider_filter = st.sidebar.multiselect('Поставщик', provider_names)
+def to_excel(dataframe):
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    dataframe.to_excel(writer, sheet_name='Sheet1', index=False)
+    writer.close()
+    processed_data = output.getvalue()
+    return processed_data
 
-# Поиск и отображение данных
-if st.sidebar.button('Поиск'):
-    products_data = fetch_products(store=store_filter, provider=provider_filter)
-    if products_data:
-        actual_df = pd.DataFrame(products_data)
+def streamlit_interface():
+    st.sidebar.title("Остаток товара")
 
-        # Добавление названий столбцов вручную
-        header_cols = st.columns([3,4,4, 3, 8, 4, 4, 2])
-        header_cols[0].write("№")
-        header_cols[1].write("Магазин")
-        header_cols[2].write("Провайдер")
-        header_cols[3].write("Остаток")
-        header_cols[4].write("Товар")
-        header_cols[5].write("Артикул")
-        header_cols[6].write("Баркод")
-        header_cols[7].write("Картинка")
+    stores = fetch_stores()
+    providers = fetch_providers()
+    
+    store_names = [store['name'] for store in stores]
+    provider_names = [provider['name'] for provider in providers]
 
-        # Отображение данных
-        for index, product in actual_df.iterrows():
-            cols = st.columns([3,4,4, 3, 8, 4, 4, 2])
-            cols[0].write(index + 1)
-            cols[1].write(product['магазин'])
-            cols[2].write(product['провайдер'])
-            cols[3].write(product['остаток_колво'])
-            cols[4].write(product['товар'])
-            cols[5].write(product['vendor_code'])
-            cols[6].write(product['barcode'])
-            if product['картинка']:
-                cols[7].image(product['картинка'], width=44)
+    store_filter = st.sidebar.multiselect('Магазин', store_names)
+    provider_filter = st.sidebar.multiselect('Поставщик', provider_names)
 
+    if st.sidebar.button('Поиск'):
+        products_data = fetch_products(store=store_filter, provider=provider_filter)
+        if products_data:
+            products_df = pd.DataFrame(products_data)
+            # Предполагаем, что 'картинка' является URL изображения
+            # Создаем столбец с HTML-кодом для изображений
+            products_df['Картинка'] = products_df['картинка'].apply(
+                lambda x: f'<img src="{x}" width="50" />' if x else ''
+            )
+            # Удаляем столбец с URL изображений
+            products_df.drop('картинка', axis=1, inplace=True)
+            # Используем st.write для отображения HTML-таблицы с изображениями
+            st.write(products_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+            
+            # ... (код для создания Excel-файла и кнопки скачивания)
 
+            
+            excel_data = to_excel(products_df)  # Генерируем данные Excel из DataFrame
+            file_name = format_filename(provider_filter)
+            st.sidebar.download_button(
+                label="Скачать Excel",
+                data=excel_data,
+                file_name=file_name,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            )
 
-
-        # Функция для форматирования имени файла с текущей датой и именами провайдеров
-        def format_filename(providers):
-            # Получаем текущую дату
-            date_str = datetime.now().strftime("%Y-%m-%d")
-            # Если выбран один провайдер, используем его имя
-            if len(providers) == 1:
-                provider_name = providers[0]
-            # Если выбрано несколько провайдеров, объединяем их имена через подчеркивание
-            elif providers:
-                provider_name = "_".join(providers)
-            else:
-                provider_name = "all_providers"
-            # Формируем имя файла
-            file_name = f"{date_str}_{provider_name}_zerde.xlsx"
-            return file_name
-
-         # Функция для сохранения DataFrame в байтовом потоке вместо файла на диске
-        def to_excel(dataframe):
-            output = BytesIO()
-            writer = pd.ExcelWriter(output, engine='xlsxwriter')
-            dataframe.to_excel(writer, sheet_name='Sheet1', index=False)
-            writer.close()
-            processed_data = output.getvalue()
-            return processed_data
-
-        excel_data = to_excel(actual_df)  # Генерируем данные Excel из DataFrame
-
-        # Использование функции format_filename для задания имени файла
-        file_name = format_filename(provider_filter)
-
-        # Кнопка для скачивания Excel файла с динамическим именем файла
-        st.sidebar.download_button(
-            label="Скачать Excel",
-            data=excel_data,
-            file_name=file_name,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
+if __name__ == "__main__":
+    streamlit_interface()
