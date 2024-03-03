@@ -3,6 +3,8 @@ from typing import Optional
 from fastapi import FastAPI, Depends, HTTPException,APIRouter
 from typing import List, Optional
 from database import get_db  ,Session
+from urllib.parse import quote
+
 
 app = FastAPI()
 product_balance_router = APIRouter()
@@ -55,7 +57,14 @@ def read_products(store: Optional[List[str]] = None, provider: Optional[List[str
 
     try:
         result = db.execute(query, {'store': tuple(store), 'provider': tuple(provider)}).fetchall()
-        return result
+        # Преобразуем данные в список словарей для кодирования URL картинок
+        products_info = []
+        for row in result:
+            product = dict(row)
+            if product['картинка']:
+                product['картинка'] = quote(product['картинка'], safe=':/')
+            products_info.append(product)
+        return products_info
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
