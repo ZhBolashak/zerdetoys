@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, text, Column, inspect, Integer, String, fu
 from sqlalchemy.ext.declarative import declarative_base
 
 # Обновленные параметры подключения к базе данных
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:aOwmK6%21h%5e15%40@91.147.93.9:5432/assistant_db_zerde"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:aOwmK6%21h%5e15%40@87.255.194.116:5432/assistant_db"
 
 # Создаем движок для подключения к базе данных
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
