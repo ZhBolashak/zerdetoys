@@ -4,6 +4,7 @@ import dash_bootstrap_components as dbc
 from table_product import update_table, update_dropdowns
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+server = app.server  # Добавьте эту строку
 
 # Добавление невидимого компонента для инициализации данных
 app.layout = dbc.Container([
