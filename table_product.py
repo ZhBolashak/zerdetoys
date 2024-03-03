@@ -2,6 +2,7 @@ from dash import Dash, dcc, html, Input, Output, State, callback
 import dash_bootstrap_components as dbc
 import pandas as pd
 import requests
+import validators  # Убедитесь, что установили пакет validators
 
 BASE_URL = 'http://77.243.81.124:8000'  # Определяем базовый URL как глобальную переменную
 
@@ -73,10 +74,10 @@ def update_table(n_clicks, selected_stores, selected_providers):
 
     # Обновляем столбец 'картинка' для отображения изображений
     def generate_image_html(url):
-        if url:
-            return html.Img(src=url, style={'max-height': '100px', 'max-width': '100px'})
-        return ""
-
+    # Проверяем валидность URL
+        if validators.url(url):
+            return html.Img(src=url, style={'max-height': '60px', 'max-width': '60px'})
+        return ""  # Возвращаем пустое значение для невалидных URL
     products_df['картинка'] = products_df['картинка'].apply(generate_image_html)
 
     # Создание таблицы HTML вручную, поскольку dbc.Table.from_dataframe не поддерживает вставку HTML элементов
