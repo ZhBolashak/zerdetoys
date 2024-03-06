@@ -18,5 +18,8 @@ app.layout = html.Div([
 register_product_callbacks(app)
 register_sale_callbacks(app)
 
+# Добавьте эту строку
+server = app.server
+
 if __name__ == '__main__':
     app.run_server(debug=True)
