@@ -1,24 +1,50 @@
 # app.py
-from dash import Dash, dcc, html
+from dash import Dash, dcc, html, Input, Output
 import dash_bootstrap_components as dbc
-from frontend.layouts.layout_main import product_get_layout, sale_get_layout, download_excel_layout
+
+# layouts,
+from frontend.layouts.layout_product import product_get_layout, download_excel_layout
+from frontend.layouts.layout_sale import sale_get_layout, download_excel_sale_layout
+from frontend.layouts.layout_sidebar import sidebar_layout
+
+#callbacks
 from frontend.callbacks.callback_product import register_callbacks as register_product_callbacks
 from frontend.callbacks.callback_sale import sale_callbacks as register_sale_callbacks
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
 
 app.layout = html.Div([
-    dcc.Tabs([
-        dcc.Tab(label='Остаток товара', children=[product_get_layout(), download_excel_layout()]),
-        dcc.Tab(label='Движение средств', children=[sale_get_layout()]),
-    ])
+    dcc.Location(id='url', refresh=False),
+    dbc.Row([
+        dbc.Col(sidebar_layout(), width=2),
+        dbc.Col(html.Div(id='page-content'), width=10),
+    ], style={'height': '100vh'})  
 ])
 
-# Регистрация коллбэков для каждой вкладки
+
+@app.callback(Output('page-content', 'children'), [Input('url', 'pathname')])
+def render_page_content(pathname):
+    if pathname == "/": return  download_excel_layout(), product_get_layout()
+    elif pathname == "/sales": return download_excel_sale_layout(), sale_get_layout()
+    else:
+        # Обновленный компонент для замены устаревшего Jumbotron
+        return dbc.Container([
+            html.H1("404: Страница не найдена", className="text-danger"),
+            html.Hr(),
+            html.P(f"Путь {pathname} не распознан...")
+        ], fluid=True)
+
+# Регистрация колбэков
 register_product_callbacks(app)
 register_sale_callbacks(app)
 
-# Добавьте эту строку
+if __name__ == '__main__':
+    app.run_server(debug=True)
+
+
+
+# Запуск сервера
 server = app.server
 
 if __name__ == '__main__':
