@@ -1,4 +1,4 @@
-#layout_sale.py
+#layout_sidebar.py
 from dash import  dcc, html
 import dash_bootstrap_components as dbc
 
@@ -8,8 +8,7 @@ def sidebar_layout():
     sidebar_header = dbc.Row([
         dbc.Col(html.H2("Отчетность", className="display-4")),
         dbc.Col(html.Hr()),
-    ])
-    
+    ]) 
     sidebar = html.Div(
         [
             sidebar_header,
@@ -17,6 +16,7 @@ def sidebar_layout():
                 [
                     dbc.NavLink("Остаток товара", href="/", active="exact"),
                     dbc.NavLink("Движение средств", href="/sales", active="exact"),
+                    dbc.NavLink("Дебиторская задолжность", href="/debt", active="exact"),
                 ],
                 vertical=True,
                 pills=True,
