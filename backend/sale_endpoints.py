@@ -23,6 +23,7 @@ class SaleOrder(BaseModel):
     username: Optional[str]
 
     class Config:
+        orm_mode=True
         from_attributes = True
 
 def parse_date(date_str: str) -> Optional[datetime]:
