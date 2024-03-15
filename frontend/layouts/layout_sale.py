@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 # Функция для получения лэйаута для страницы ДДС
 def sale_get_layout():
     return dbc.Container([
-        dbc.Row(dbc.Col(html.H1("ДДСtest"))),
+        dbc.Row(dbc.Col(html.H1("ДДС"))),
         dbc.Row([
             dbc.Col(dcc.Dropdown(id='store-dropdown-report', multi=False, placeholder='Выберите магазин')),
             dbc.Col(dcc.DatePickerRange(
