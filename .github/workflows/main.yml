@@ -29,5 +29,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no $SERVER_USERNAME@$SERVER_IP << EOF
             cd ~/zerdetoys
             git pull
+            source venv/bin/activate
+            pip install -r requirements.txt
             # Any additional commands you need to run
           EOF
