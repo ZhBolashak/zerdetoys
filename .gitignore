@@ -5,7 +5,6 @@ frontend/__pycache__/
 backend/__pycache__/
 *.py[cod]
 *$py.class
-frontend/config.py
 
 
 # C extensions
