@@ -46,9 +46,7 @@ def sale_callbacks(app):
     )
     def update_report(n_clicks, selected_store, start_date, end_date):
         if not n_clicks or not selected_store or not start_date or not end_date:
-            # Возвращаем сообщение об ошибке и no_update для данных, чтобы избежать их сброса
-            return html.Div("Выберите магазин, укажите даты и нажмите 'Получить отчет'."), no_update
-
+            return [html.Div("Выберите магазин, укажите даты и нажмите 'Получить отчет'."), no_update]
 
         # Преобразование дат в нужный формат
         start_date_formatted = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d.%m.%Y') if start_date else None
@@ -64,13 +62,13 @@ def sale_callbacks(app):
         # Выполнение POST-запроса с параметрами в строке запроса
         response = requests.post(f'{BASE_URL}/api/dds/sales-and-orders/', params=params)
 
-        if response.status_code == 200:
-            raw_data = response.json()
-        else:
-            return html.Div(f"Ошибка при получении данных: {response.status_code}")
+        if response.status_code != 200:
+            return [html.Div(f"Ошибка при получении данных: {response.status_code}"), no_update]
+
+        raw_data = response.json()
 
         if not raw_data:
-            return html.Div("Нет данных по выбранным критериям.")
+            return [html.Div("Нет данных по выбранным критериям."), no_update]
 
         # Создание DataFrame из полученных данных
         products_df = pd.DataFrame(raw_data)
@@ -84,9 +82,10 @@ def sale_callbacks(app):
         # Создание таблицы HTML
         table_header = [html.Thead(html.Tr([html.Th(col) for col in summary_df.columns]))]
         table_body = [html.Tbody([html.Tr([html.Td(summary_df.iloc[i][col]) for col in summary_df.columns]) for i in range(len(summary_df))])]
-        table = dbc.Table(table_header + table_body, bordered=True, striped=True, hover=True)
+        table = [dbc.Table(table_header + table_body, bordered=True, striped=True, hover=True)]
 
-        return table,raw_data  # Возвращаем готовую таблицу для отображения на странице
+        return [table, raw_data]  # Возвращаем готовую таблицу для отображения на странице
+
 
 
     @app.callback(
