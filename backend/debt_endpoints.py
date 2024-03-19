@@ -117,7 +117,9 @@ AND f.data >=:start_date AND f.data <=:end_date
 
     try:
         results = db.execute(query, query_params).fetchall()
-        return [DebtOrder.from_orm(row) for row in results]
+        # Преобразование каждого результата запроса в словарь, затем в экземпляр модели
+        debt_orders = [DebtOrder(**dict(row)) for row in results]
+        return debt_orders
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
