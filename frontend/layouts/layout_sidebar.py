@@ -22,6 +22,6 @@ def sidebar_layout():
                 pills=True,
             ),
         ],
-        style={'padding': '10px', 'border-right': '2px solid #d6d6d6'}
+        style={'padding': '10px', 'borderright': '2px solid #d6d6d6'}
     )
     return sidebar

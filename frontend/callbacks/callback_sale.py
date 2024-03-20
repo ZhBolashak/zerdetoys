@@ -45,6 +45,7 @@ def sale_callbacks(app):
         State('date-picker-range', 'end_date')]
     )
     def update_report(n_clicks, selected_store, start_date, end_date):
+        print("update_report - Колбэк активирован")  # Проверка активации колбэка
         if not n_clicks or not selected_store or not start_date or not end_date:
             return [html.Div("Выберите магазин, укажите даты и нажмите 'Получить отчет'."), no_update]
 
@@ -59,19 +60,33 @@ def sale_callbacks(app):
             'end_date': end_date_formatted
         }
 
+        # Отладочные выводы для каждого этапа процесса
+        print("update_report - Параметры запроса:", params)
+
         # Выполнение POST-запроса с параметрами в строке запроса
         response = requests.post(f'{BASE_URL}/api/dds/sales-and-orders/', params=params)
 
+        print("update_report - Статус ответа:", response.status_code)
+
         if response.status_code != 200:
+            print("update_report - Ошибка при запросе:", response.text)
             return [html.Div(f"Ошибка при получении данных: {response.status_code}"), no_update]
 
         raw_data = response.json()
+
+        # Вывод сырых данных для проверки
+        print("update_report - Сырые данные:", raw_data)
 
         if not raw_data:
             return [html.Div("Нет данных по выбранным критериям."), no_update]
 
         # Создание DataFrame из полученных данных
-        products_df = pd.DataFrame(raw_data)
+        try:
+            products_df = pd.DataFrame(raw_data)
+            print("update_report - DataFrame создан")
+        except Exception as e:
+            print(f"update_report - Ошибка при создании DataFrame: {e}")
+            return [html.Div("Ошибка при обработке данных."), no_update]
 
         # Агрегирование данных по типу оплаты
         summary_df = products_df.groupby(['days', 'payment']).agg({'amount': 'sum'}).reset_index()
@@ -84,7 +99,8 @@ def sale_callbacks(app):
         table_body = [html.Tbody([html.Tr([html.Td(summary_df.iloc[i][col]) for col in summary_df.columns]) for i in range(len(summary_df))])]
         table = [dbc.Table(table_header + table_body, bordered=True, striped=True, hover=True)]
 
-        return [table, raw_data]  # Возвращаем готовую таблицу для отображения на странице
+        # Возвращаем готовую таблицу для отображения на странице
+        return [table, products_df.to_dict('records')]  # Используйте to_dict('records') для сериализации
 
 
 

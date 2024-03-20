@@ -5,6 +5,12 @@ from typing import List, Optional
 from datetime import datetime, date
 from sqlalchemy.orm import Session
 from backend.database import get_db
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 sales_router = APIRouter()
 
@@ -31,6 +37,7 @@ def parse_date(date_str: str) -> Optional[datetime]:
     except ValueError:
         raise HTTPException(status_code=422, detail=f"Invalid date format: {date_str}")
 
+
 @sales_router.post("/sales-and-orders/", response_model=List[SaleOrder])
 def read_sales_and_orders(
     store: Optional[str] = None,
@@ -41,8 +48,8 @@ def read_sales_and_orders(
     start_date_obj = parse_date(start_date) if start_date else None
     end_date_obj = parse_date(end_date) if end_date else None
 
-    # Инициализация query_params для передачи в SQL запрос
     query_params = {'store': store, 'start_date': start_date_obj, 'end_date': end_date_obj}
+
 
 
     # Обновлённый запрос с учётом новой логики
@@ -94,9 +101,13 @@ def read_sales_and_orders(
     
     try:
         results = db.execute(query, query_params).fetchall()
-        return [SaleOrder.from_orm(row) for row in results]  # Используем from_orm без .dict()
+        sale_orders = [SaleOrder(**dict(zip(result.keys(), result))) for result in results]
+        logger.info("Запрос успешно обработан")
+        return sale_orders
     except Exception as e:
+        logger.error(f"Ошибка при обработке запроса: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 #----------------------Магазин список-------------------------------------------------------
