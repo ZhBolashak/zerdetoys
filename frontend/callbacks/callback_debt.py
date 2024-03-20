@@ -38,12 +38,13 @@ def debt_callbacks(app):
         State('date-picker-range', 'end_date')]
     )
     def debt_report(n_clicks, selected_client, start_date, end_date):
-        if not n_clicks or not selected_client or not start_date or not end_date:
-            return html.Div("Выберите клиента, укажите даты и нажмите 'Получить отчет'.")
+        if not n_clicks or not start_date or not end_date:
+            # Если кнопка не нажата, или не указаны даты, не обновлять.
+            return html.Div("Укажите даты и нажмите 'Получить отчет'.")
 
         # Создание строки запроса
         params = {
-            'client': selected_client,
+            'client': selected_client if selected_client else '',
             'start_date': start_date,
             'end_date': end_date
         }

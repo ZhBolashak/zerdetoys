@@ -15,7 +15,7 @@ class DebtOrder(BaseModel):
     Debet: Optional[float]
     Kredit: Optional[float]
     currency: Optional[str]
-    first_name: str
+    first_name: Optional[str]
 
     class Config:
         from_attributes = True
@@ -36,10 +36,10 @@ def read_debt_orders(
     start_date_obj = parse_date(start_date) if start_date else None
     end_date_obj = parse_date(end_date) if end_date else None
 
-    query_params = {'client': client, 'start_date': start_date_obj, 'end_date': end_date_obj}
+    client_filter = "AND f.first_name = :client" if client else ""
+    date_filter = "AND f.data >= :start_date AND f.data <= :end_date" if start_date_obj and end_date_obj else ""
 
-    # Используйте здесь корректные имена столбцов, чтобы они совпадали с моделью
-    query = """
+    query = f"""
        select *
 from 
 (SELECT 
@@ -108,16 +108,16 @@ join ref_payment_article rpa on rpa.id =cf.payment_article_id
 join ref_currency rc on rc.id =cf.currency_id 
 where cf.payment_article_id=24
 )f
-where 
-first_name=:client
-AND f.data >=:start_date AND f.data <=:end_date
-    ORDER BY f.data
+        WHERE 1=1
+        {client_filter}
+        {date_filter}
+        ORDER BY f.data
     """
-    # Убедитесь, что алиасы (AS) в SQL запросе соответствуют именам полей в модели DebtOrder
+
+    query_params = {'client': client, 'start_date': start_date_obj, 'end_date': end_date_obj}
 
     try:
         results = db.execute(query, query_params).fetchall()
-        # Преобразование каждого результата запроса в словарь, затем в экземпляр модели
         debt_orders = [DebtOrder(**dict(row)) for row in results]
         return debt_orders
     except Exception as e:
