@@ -45,7 +45,7 @@ def sale_callbacks(app):
         State('date-picker-range', 'end_date')]
     )
     def update_report(n_clicks, selected_store, start_date, end_date):
-        print("update_report - Колбэк активирован")  # Проверка активации колбэка
+        #print("update_report - Колбэк активирован")  # Проверка активации колбэка
         if not n_clicks or not selected_store or not start_date or not end_date:
             return [html.Div("Выберите магазин, укажите даты и нажмите 'Получить отчет'."), no_update]
 
@@ -61,12 +61,12 @@ def sale_callbacks(app):
         }
 
         # Отладочные выводы для каждого этапа процесса
-        print("update_report - Параметры запроса:", params)
+        #print("update_report - Параметры запроса:", params)
 
         # Выполнение POST-запроса с параметрами в строке запроса
         response = requests.post(f'{BASE_URL}/api/dds/sales-and-orders/', params=params)
 
-        print("update_report - Статус ответа:", response.status_code)
+        #print("update_report - Статус ответа:", response.status_code)
 
         if response.status_code != 200:
             print("update_report - Ошибка при запросе:", response.text)
@@ -75,7 +75,7 @@ def sale_callbacks(app):
         raw_data = response.json()
 
         # Вывод сырых данных для проверки
-        print("update_report - Сырые данные:", raw_data)
+        #print("update_report - Сырые данные:", raw_data)
 
         if not raw_data:
             return [html.Div("Нет данных по выбранным критериям."), no_update]

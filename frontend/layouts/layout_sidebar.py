@@ -16,6 +16,7 @@ def sidebar_layout():
                 [
                     dbc.NavLink("Остаток товара", href="/", active="exact"),
                     dbc.NavLink("Движение средств", href="/sales", active="exact"),
+                    dbc.NavLink("Движение средств:статьи", href="/cashflow", active="exact"),
                     dbc.NavLink("Дебиторская задолжность", href="/debt", active="exact"),
                 ],
                 vertical=True,
