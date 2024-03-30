@@ -14,7 +14,7 @@ product_balance_router = APIRouter()
 #----------------------Список товара через фильтр-------------------------------------------------------
 class ProductInfo(BaseModel):
     магазин: str
-    провайдер: str
+    провайдер: Optional[str]
     остаток_колво: int
     товар: str
     vendor_code: str
@@ -36,7 +36,7 @@ def read_products(store: Optional[List[str]] = None, provider: Optional[List[str
         p."name" AS товар,
         p.vendor_code,
         MAX(pb.barcode) AS barcode,
-        'https://zerdetoys.assistant.org.kz:9008/images/' || fi.stored_path AS картинка
+        {} AS картинка
     FROM 
         product_supply ps 
     JOIN product p ON p.id = ps.product_id 
@@ -48,16 +48,18 @@ def read_products(store: Optional[List[str]] = None, provider: Optional[List[str
     WHERE 1=1
     """.format("'https://zerdetoys.assistant.org.kz:9008/images/' || fi.stored_path" if include_image else "NULL")
 
+    params = {}
     if store:
         query += " AND s.\"name\" IN :store"
+        params['store'] = tuple(store)
     if provider:
         query += " AND p2.\"name\" IN :provider"
+        params['provider'] = tuple(provider)
     
     query += " GROUP BY s.\"name\", p2.\"name\", p.\"name\", p.vendor_code, fi.stored_path"
 
     try:
-        result = db.execute(query, {'store': tuple(store), 'provider': tuple(provider)}).fetchall()
-        # Преобразуем данные в список словарей для кодирования URL картинок
+        result = db.execute(query, params).fetchall()
         products_info = []
         for row in result:
             product = dict(row)
@@ -67,6 +69,7 @@ def read_products(store: Optional[List[str]] = None, provider: Optional[List[str
         return products_info
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 #----------------------Провайдер-------------------------------------------------------

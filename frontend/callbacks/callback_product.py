@@ -37,66 +37,57 @@ def register_callbacks(app):
             print(f"Error updating dropdowns: {e}")
             return [], []
 
-
+    # Функция для обновления столбца 'картинка' с проверкой валидности URL
+    def generate_image_html(url):
+        if not isinstance(url, str) or not validators.url(url):
+            return ""  # Возвращаем пустое значение для невалидных или отсутствующих URL
+            
+        encoded_url = quote(url, safe=':/')
+        return html.Img(src=encoded_url, style={'max-height': '60px', 'max-width': '60px'})
 
     @app.callback(
-    Output('products-table', 'children'),
-    Output('store-data', 'data'),  # Добавление выходного значения для сохранения данных в dcc.Store
-    [Input('search-button', 'n_clicks')],
-    [State('store-dropdown', 'value'), State('provider-dropdown', 'value')]
+        [Output('products-table', 'children'), Output('store-data', 'data')],
+        [Input('search-button', 'n_clicks')],
+        [State('store-dropdown', 'value'), State('provider-dropdown', 'value')]
     )
     def update_table(n_clicks, selected_stores, selected_providers):
-        if not n_clicks or not selected_stores or not selected_providers:
-            # Если кнопка не была нажата или значения не выбраны, не обновляем данные
-            return html.Div("Выберите магазин, поставщика и нажмите 'Поиск'."), no_update
+        if not n_clicks or not selected_stores:
+            return html.Div("Выберите магазин и нажмите 'Поиск'."), no_update
 
-
-        # Подготовка данных для POST-запроса
         data = {
             'store': selected_stores,
-            'provider': selected_providers,
-            'include_image': True  # Мы хотим получить изображения
+            'include_image': True
         }
 
-        # Выполнение POST-запроса
+        if selected_providers:
+            data['provider'] = selected_providers
+
         response = requests.post(f'{BASE_URL}/api/v1/products/', json=data)
 
-        if response.status_code == 200:
-            products_data = response.json()
-        else:
-            return f"Ошибка при получении данных: {response.status_code}"
+        if response.status_code != 200:
+            return (f"Ошибка при получении данных: {response.status_code}", no_update)
 
+        products_data = response.json()
         if not products_data:
-            return "Нет данных по выбранным критериям."
+            return ("Нет данных по выбранным критериям.", no_update)
 
-        # Создание DataFrame из полученных данных
         products_df = pd.DataFrame(products_data)
-
-        # Проверяем, что в DataFrame есть данные
         if products_df.empty:
-            return "Нет данных по выбранным критериям."
+            return ("Нет данных по выбранным критериям.", no_update)
 
-        # Обновляем столбец 'картинка' для отображения изображений
-        def generate_image_html(url):
-            # Кодируем URL, чтобы корректно обрабатывать пробелы и другие специальные символы
-            encoded_url = quote(url, safe=':/')
-            # Проверяем валидность URL
-            if validators.url(encoded_url):
-                return html.Img(src=encoded_url, style={'max-height': '60px', 'max-width': '60px'})
-            return ""  # Возвращаем пустое значение для невалидных URL
         products_df['картинка'] = products_df['картинка'].apply(generate_image_html)
 
-        # Создание таблицы HTML вручную, поскольку dbc.Table.from_dataframe не поддерживает вставку HTML элементов
         table_header = [html.Thead(html.Tr([html.Th(col) for col in products_df.columns]))]
         table_body = [html.Tbody([
             html.Tr([
-                html.Td(products_df.iloc[i][col]) if col != 'картинка' else 
-                html.Td(products_df.iloc[i][col]) for col in products_df.columns
+                html.Td(products_df.iloc[i][col]) if col != 'картинка' else html.Td(products_df.iloc[i][col], style={'text-align': 'center'}) 
+                for col in products_df.columns
             ]) for i in range(len(products_df))
         ])]
         table = dbc.Table(table_header + table_body, bordered=True, striped=True, hover=True)
 
-        return table, products_data  # products_data - это список словарей с данными продуктов   
+        return table, products_data
+ 
     
      
     @app.callback(
