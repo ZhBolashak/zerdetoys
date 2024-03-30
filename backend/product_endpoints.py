@@ -36,7 +36,7 @@ def read_products(store: Optional[List[str]] = None, provider: Optional[List[str
         p."name" AS товар,
         p.vendor_code,
         MAX(pb.barcode) AS barcode,
-        {} AS картинка
+        'https://zerdetoys.assistant.org.kz:9008/images/' || fi.stored_path AS картинка
     FROM 
         product_supply ps 
     JOIN product p ON p.id = ps.product_id 
