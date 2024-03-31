@@ -7,6 +7,7 @@ from urllib.parse import quote
 app = FastAPI()
 product_balance_router = APIRouter()
 
+#----------------------Список товара через фильтр-------------------------------------------------------
 class ProductInfo(BaseModel):
     магазин: str
     провайдер: Optional[str]
@@ -19,7 +20,7 @@ class ProductInfo(BaseModel):
     картинка: Optional[HttpUrl] = None
 
     class Config:
-        orm_mode = True  # Если вы используете ORM
+        from_attributes = True
 
 @product_balance_router.post("/products/", response_model=List[ProductInfo])
 def read_products(store: Optional[List[str]] = None, provider: Optional[List[str]] = None, include_image: bool = False, db: Session = Depends(get_db)):
