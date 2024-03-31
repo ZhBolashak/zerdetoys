@@ -1,63 +1,73 @@
 from pydantic import BaseModel, HttpUrl
-from typing import Optional
-from fastapi import FastAPI, Depends, HTTPException,APIRouter
-from typing import List, Optional
-from backend.database import get_db  ,Session
+from typing import Optional, List
+from fastapi import FastAPI, Depends, HTTPException, APIRouter
+from backend.database import get_db, Session
 from urllib.parse import quote
-
 
 app = FastAPI()
 product_balance_router = APIRouter()
 
-
-
-#----------------------Список товара через фильтр-------------------------------------------------------
 class ProductInfo(BaseModel):
     магазин: str
     провайдер: Optional[str]
     остаток_колво: int
+    оптовая_цена: int
+    розничная_цена: int
     товар: str
     vendor_code: str
     barcode: Optional[str]
     картинка: Optional[HttpUrl] = None
 
     class Config:
-        from_attributes = True
-
-
+        orm_mode = True  # Если вы используете ORM
 
 @product_balance_router.post("/products/", response_model=List[ProductInfo])
 def read_products(store: Optional[List[str]] = None, provider: Optional[List[str]] = None, include_image: bool = False, db: Session = Depends(get_db)):
+    # Использование обновлённого запроса с CTE
     query = """
+    WITH RankedSupplies AS (
+        SELECT 
+            s."name" AS "магазин",
+            p2."name" AS "провайдер",
+            p."name" AS "товар",
+            p.vendor_code,
+            ps.count AS "остаток_колво",
+            ps.trade_price AS "оптовая_цена",
+            ps.retail_price AS "розничная_цена",
+            MAX(pb.barcode) OVER (PARTITION BY p.id) AS barcode,
+            'https://zerdetoys.assistant.org.kz:9008/images/' || fi.stored_path AS "картинка",
+            ROW_NUMBER() OVER (PARTITION BY s.id, p2.id, p.id ORDER BY ps.created_on DESC) AS rn
+        FROM 
+            product_supply ps 
+        JOIN product p ON p.id = ps.product_id 
+        JOIN product_barcode pb ON pb.product_id = p.id 
+        JOIN provider p2 ON p2.id = ps.provider_id
+        JOIN store s ON s.id = ps.store_id 
+        LEFT JOIN product_image pi2 ON pi2.product_id = p.id AND pi2.is_main IS TRUE
+        LEFT JOIN file_info fi ON fi.id = pi2.file_info_id 
+    )
     SELECT 
-        s."name" AS магазин,
-        p2."name" AS провайдер,
-        SUM(ps.count) AS остаток_колво,
-        p."name" AS товар,
-        p.vendor_code,
-        MAX(pb.barcode) AS barcode,
-        'https://zerdetoys.assistant.org.kz:9008/images/' || fi.stored_path AS картинка
-    FROM 
-        product_supply ps 
-    JOIN product p ON p.id = ps.product_id 
-    JOIN product_barcode pb ON pb.product_id = p.id 
-    JOIN provider p2 ON p2.id = ps.provider_id
-    JOIN store s ON s.id = ps.store_id 
-    LEFT JOIN product_image pi2 ON pi2.product_id = p.id AND pi2.is_main IS TRUE
-    LEFT JOIN file_info fi ON fi.id = pi2.file_info_id 
-    WHERE 1=1
-    """.format("'https://zerdetoys.assistant.org.kz:9008/images/' || fi.stored_path" if include_image else "NULL")
+        магазин,
+        провайдер,
+        товар,
+        vendor_code,
+        остаток_колво,
+        оптовая_цена,
+        розничная_цена,
+        barcode,
+        картинка
+    FROM RankedSupplies
+    WHERE rn = 1
+    """
 
     params = {}
     if store:
-        query += " AND s.\"name\" IN :store"
+        query += " AND магазин IN :store"
         params['store'] = tuple(store)
     if provider:
-        query += " AND p2.\"name\" IN :provider"
+        query += " AND провайдер IN :provider"
         params['provider'] = tuple(provider)
     
-    query += " GROUP BY s.\"name\", p2.\"name\", p.\"name\", p.vendor_code, fi.stored_path"
-
     try:
         result = db.execute(query, params).fetchall()
         products_info = []
