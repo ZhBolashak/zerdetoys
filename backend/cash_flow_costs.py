@@ -10,7 +10,7 @@ costs_router = APIRouter()
 # Модель данных для денежного потока
 class CashFlowInfo(BaseModel):
     id: int
-    дата: datetime
+    дата: date
     Направление: Optional[str]
     Расход: float
     Валюта: Optional[str]

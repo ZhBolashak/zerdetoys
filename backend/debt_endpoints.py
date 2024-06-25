@@ -162,8 +162,8 @@ def get_providers(db: Session = Depends(get_db)):
 
 class CashFlowdebt(BaseModel):
     id: int
-    дата_формирования: datetime
-    дата_посадки: datetime
+    дата_формирования: date
+    дата_посадки: date
     направление: Optional[str]
     группа: Optional[str]
     сумма: Optional[float]

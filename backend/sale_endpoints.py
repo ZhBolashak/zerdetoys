@@ -17,7 +17,7 @@ sales_router = APIRouter()
 
 class SaleOrder(BaseModel):
     days: date
-    created_on: datetime
+    created_on: date
     transaction_id: int
     external_id:Optional[str]
     amount: float
