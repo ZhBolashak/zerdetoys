@@ -1,11 +1,12 @@
 #callback_cash_flow.py
-from dash import Dash, Input, Output,no_update
+from dash import Dash, html, Input, Output, State, callback, no_update
 from dash.dependencies import Input, Output, State, ALL, MATCH
 from dash import callback_context
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 import requests
 import json
+import pandas as pd
 
 #внутренный импорт
 from frontend.config import BASE_URL
@@ -18,88 +19,28 @@ app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 
 # ---------Callback для получение списка статей-----------------
+
 def cash_flow_callbacks(app):
     @app.callback(
-        Output('payment-article-dropdown', 'children'),
+        Output('payment-article-dropdown', 'options'),
         Input('init-particle', 'children')
     )
     def update_payment_article_dropdown(_):
-            try:
-                response = requests.get(f'{BASE_URL}/api/dds/payment_articles')
-                if response.status_code == 200:
-                    payment_articles = response.json()
-                else:
-                    print(f"Failed to fetch payment articles, status code: {response.status_code}")
-                    return []
-
-                # Словарь для группировки статей платежей по их группам
-                grouped_articles = {}
-                for article in payment_articles:
-                    group = article['payment_article_group']
-                    if group not in grouped_articles:
-                        grouped_articles[group] = []
-                    grouped_articles[group].append(article)
-
-                # Создание DropdownMenu с подменю для каждой группы
-                dropdown_items = []
-                for group, articles in grouped_articles.items():
-                    sub_menu_items = [
-                        dbc.DropdownMenuItem(
-                            article['ref_payment_article'],
-                            id={
-                                'type': 'payment-article-item',
-                                'index': article['payment_article_id'] 
-                            }
-                        )
-                        for article in articles
-                    ]
-                    sub_menu = dbc.DropdownMenu(sub_menu_items, label=group, nav=True)
-                    dropdown_items.append(sub_menu) 
-
-                return dropdown_items
-
-            except Exception as e:
-                print(f"Error updating dropdowns: {e}")
+        try:
+            response = requests.get(f'{BASE_URL}/api/debt/payment_articles_debt')
+            if response.status_code == 200:
+                #print("API call successful")
+                payment_articles = response.json()
+                #print("Received data:", payment_articles)
+                options = [{'label': article['ref_payment_article'], 'value': article['id']} for article in payment_articles if article['ref_payment_article'] is not None]
+                #print("Dropdown options:", options)
+                return options
+            else:
+                print(f"Failed to fetch articles, status code: {response.status_code}")
                 return []
-            
-    @app.callback(
-        Output('payment-article-dropdown', 'value'),
-        [Input({'type': 'payment-article-item', 'index': ALL}, 'n_clicks')],
-        [State({'type': 'payment-article-item', 'index': ALL}, 'id')]
-    )
-    def display_selected_article(n_clicks_list, ids_list):
-        ctx = callback_context
-        if not ctx.triggered:
-            # Если не было события, вернуть значение по умолчанию
-            return no_update
-        else:
-            # Получаем ID выбранной статьи
-            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-            selected_article_id = json.loads(button_id)['index']
-            # Возвращаем ID, который будет использоваться в callback для сохранения данных
-            return selected_article_id
-
-
-    @app.callback(
-        Output('selected-article-name', 'children'),
-        [Input({'type': 'payment-article-item', 'index': ALL}, 'n_clicks')],
-        prevent_initial_call=True
-    )
-    def display_selected_article_name(n_clicks):
-        ctx = callback_context
-        if not ctx.triggered:
-            return "No article selected"
-        else:
-            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-            selected_article_id = json.loads(button_id)['index']
-            # Загружаем список статей заново при каждом вызове функции
-            response = requests.get(f'{BASE_URL}/api/dds/payment_articles')
-            payment_articles = response.json() if response.status_code == 200 else []
-            selected_article_name = next(
-                (article['ref_payment_article'] for article in payment_articles if article['payment_article_id'] == selected_article_id),
-                "Неизвестная статья"
-            )
-            return f"Выбранная статья: {selected_article_name}"
+        except Exception as e:
+            print(f"Error updating dropdowns: {e}")
+            return []
 
 
 
@@ -256,3 +197,36 @@ def cash_flow_callbacks(app):
                 return f"Ошибка при отправке данных: {response.text}"
         else:
             raise PreventUpdate
+        
+#---------------------посаженные данные по дебиторке---------------------------
+
+
+    @app.callback(
+        Output('cash-flow-debt-output', 'children'),
+        Input('init_cash_flow_debt', 'n_intervals')  # Изменение на n_intervals для автоматического вызова
+    )
+    def load_cash_flow_data(_):
+        try:
+            response = requests.get(f'{BASE_URL}/api/debt/cash_flow_debt')
+            if response.status_code == 200:
+                cash_flow_data = response.json()
+                #print("Received data from API:", cash_flow_data)
+            else:
+                return html.Div(f"Ошибка при получении данных: {response.status_code}")
+
+            if not cash_flow_data:
+                return html.Div("Нет данных по выбранным критериям.")
+
+            # Создание DataFrame из полученных данных
+            df = pd.DataFrame(cash_flow_data)
+            #print("DataFrame created:", df)
+
+            # Создание таблицы HTML
+            table_header = [html.Thead(html.Tr([html.Th(col) for col in df.columns]))]
+            table_body = [html.Tbody([html.Tr([html.Td(df.iloc[i][col]) for col in df.columns]) for i in range(len(df))])]
+            table = dbc.Table(table_header + table_body, bordered=True, striped=True, hover=True)
+
+            return table
+        except Exception as e:
+            print(f"Error loading cash flow data: {e}")
+            return html.Div(f"Error: {str(e)}")

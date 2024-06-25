@@ -1,5 +1,5 @@
 #layout_sidebar.py
-from dash import  dcc, html
+from dash import  html
 import dash_bootstrap_components as dbc
 
 # Функция для получения лэйаута для ,бокового меню
@@ -16,8 +16,10 @@ def sidebar_layout():
                 [
                     dbc.NavLink("Остаток товара", href="/", active="exact"),
                     dbc.NavLink("Движение средств", href="/sales", active="exact"),
-                    dbc.NavLink("Движение средств:статьи", href="/cashflow", active="exact"),
                     dbc.NavLink("Дебиторская задолжность", href="/debt", active="exact"),
+                    dbc.NavLink("Движение средств:Дебиторка", href="/cashflow", active="exact"),
+                    dbc.NavLink("Движение средств:Расходы", href="/cash_flow_costs", active="exact"),
+                    
                 ],
                 vertical=True,
                 pills=True,

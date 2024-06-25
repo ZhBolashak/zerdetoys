@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from backend.product_endpoints import product_balance_router
 from backend.sale_endpoints import sales_router
 from backend.debt_endpoints import debt_router
+from backend.cash_flow_costs import costs_router
 
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -15,10 +16,11 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-
 app.include_router(product_balance_router, prefix="/api/v1", tags=["Остаток товара"])
 app.include_router(sales_router, prefix="/api/dds", tags=["ДДС"])
 app.include_router(debt_router, prefix="/api/debt", tags=["Дебиторка"])
+app.include_router(costs_router, prefix="/api/costs", tags=["Расходы"])
+
 
 
 @app.exception_handler(StarletteHTTPException)
