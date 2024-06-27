@@ -9,6 +9,7 @@ from frontend.layouts.layout_sidebar import sidebar_layout
 from frontend.layouts.layout_debt import debt_get_layout
 from frontend.layouts.layout_cash_flow import cash_flow_debt_combined_layout
 from frontend.layouts.layout_cash_flow_costs import combined_layout
+from frontend.layouts.layout_credit import cash_flow_credit_combined_layout
 
 # callbacks
 from frontend.callbacks.callback_product import register_callbacks as register_product_callbacks
@@ -16,6 +17,7 @@ from frontend.callbacks.callback_sale import sale_callbacks as register_sale_cal
 from frontend.callbacks.callback_debt import debt_callbacks
 from frontend.callbacks.callback_cash_flow import cash_flow_callbacks
 from frontend.callbacks.callback_cash_flow_costs import cash_flow_costs_callbacks
+from frontend.callbacks.callback_credit import cash_flow_credit_callbacks
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -33,6 +35,7 @@ def render_page_content(pathname):
     elif pathname == "/sales": return download_excel_sale_layout(), sale_get_layout()
     elif pathname == "/cashflow": return cash_flow_debt_combined_layout()
     elif pathname == "/debt": return debt_get_layout()
+    elif pathname == "/credit": return cash_flow_credit_combined_layout()
     elif pathname == "/cash_flow_costs": return combined_layout()
     else:
         return dbc.Container([
@@ -47,6 +50,7 @@ register_sale_callbacks(app)
 debt_callbacks(app)
 cash_flow_callbacks(app)
 cash_flow_costs_callbacks(app)
+cash_flow_credit_callbacks(app)
 
 # Запуск сервера
 server = app.server

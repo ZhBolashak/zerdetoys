@@ -4,8 +4,7 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import requests
 from urllib.parse import quote
-from datetime import datetime
-import io
+from datetime import date
 from frontend.config import BASE_URL
 from dash.exceptions import PreventUpdate
 
@@ -38,9 +37,15 @@ def debt_callbacks(app):
         State('date-picker-range', 'end_date')]
     )
     def debt_report(n_clicks, selected_client, start_date, end_date):
-        if not n_clicks or not start_date or not end_date:
-            # Если кнопка не нажата, или не указаны даты, не обновлять.
-            return html.Div("Укажите даты и нажмите 'Получить отчет'.")
+        if not n_clicks:
+            # Если кнопка не нажата, не обновлять.
+            return html.Div("Нажмите 'Получить отчет' для получения данных.")
+
+        # Установка значений по умолчанию для дат, если они не выбраны
+        if not start_date:
+            start_date = "2024-01-01"
+        if not end_date:
+            end_date = date.today().isoformat()
 
         # Создание строки запроса
         params = {

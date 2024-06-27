@@ -39,7 +39,7 @@ def get_cash_flow(db: Session = Depends(get_db)):
     JOIN ref_payment_article_line rpal ON rpal.id = rpa.payment_article_line_id 
     JOIN ref_wallet_type rwt ON cf.wallet_type_id = rwt.id 
     JOIN ref_currency rc ON rc.id = cf.currency_id 
-    WHERE cf.payment_article_id NOT IN (1,22,23,24,28,38) 
+    WHERE cf.payment_article_id NOT IN (1,22,23,24,28,36,38,39) 
     AND rpa.is_system IS NOT true
     """
 
@@ -93,7 +93,7 @@ def get_payment_articles(db: Session = Depends(get_db)):
                    rpa.name AS ref_payment_article
             FROM ref_payment_article rpa
             JOIN ref_payment_article_group rpag ON rpa.payment_article_group_id = rpag.id
-            where rpa.id not in (1,22,23,24,28,38) and rpa.is_system is not true  
+            where rpa.id not in (1,22,23,24,28,36,38,39) and rpa.is_system is not true  
         """).fetchall()
 
         # Преобразование результатов в список экземпляров PaymentArticle

@@ -85,7 +85,7 @@ JOIN user_account ua ON ua.id = o.client_id
 WHERE o.status_id ='COMPLETED' and op.payment_type_id =1 
 union all
 SELECT 
-    cast(cf.created_on as date) AS days,
+    cast(coalesce(cf.occurred_on, cf.created_on) as date) AS days,
     rpa."name"  AS enumber,
     cf.amount  "Дебет", null "Кредит",
     rc."name" AS currency,
@@ -97,7 +97,7 @@ join ref_currency rc on rc.id =cf.currency_id
 where cf.payment_article_id=28 
 union all
 SELECT 
-    cast(cf.created_on as date) AS days,
+    cast(coalesce(cf.occurred_on, cf.created_on) as date) AS days,
     rpa."name"  AS enumber,
     (-1)*cf.amount  "Дебет", null "Кредит",
     rc."name" AS currency,
@@ -109,7 +109,7 @@ join ref_currency rc on rc.id =cf.currency_id
 where cf.payment_article_id in (38,22)
 union all
 SELECT 
-    cast(cf.created_on as date) AS days,
+    cast(coalesce(cf.occurred_on, cf.created_on) as date) AS days,
     rpa."name"  AS enumber,
     null  "Дебет", cf.amount  "Кредит",
     rc."name" AS currency,
@@ -192,7 +192,7 @@ def get_cash_flow(db: Session = Depends(get_db)):
     join ref_payment_article rpa on rpa.id =cf.payment_article_id 
     join ref_payment_article_group rpag on rpag.id =rpa.payment_article_group_id 
     join ref_currency rc on rc.id =cf.currency_id 
-    where cf.payment_article_id in (28,38,24,22)
+    where cf.payment_article_id in (22,23,24,28,36,38,39)
     order by cf.id desc 
     """
 
@@ -222,7 +222,7 @@ def get_payment_articles(db: Session = Depends(get_db)):
                    rpa.name AS ref_payment_article
             FROM ref_payment_article rpa
             JOIN ref_payment_article_group rpag ON rpa.payment_article_group_id = rpag.id
-            WHERE rpa.is_system IS NOT TRUE AND rpa.id IN (28, 38, 24, 22)
+            WHERE rpa.is_system IS NOT TRUE AND rpa.id IN (22,23,24,28,36,38,39)
         """).fetchall()
 
         # Преобразование результатов в список экземпляров PaymentArticle
