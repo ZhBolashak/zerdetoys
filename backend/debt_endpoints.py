@@ -12,6 +12,7 @@ debt_router = APIRouter()
 class DebtOrder(BaseModel):
     data: date
     document: str
+    discount: Optional[float]
     Debet: Optional[float]
     Kredit: Optional[float]
     currency: Optional[str]
@@ -45,16 +46,18 @@ from
 (SELECT 
     cast(s.created_on as date) AS "data",  -- вместо "datas"
     'Продажа кассой - № чека ' || COALESCE(s.external_id, s.id::text) AS "document",  -- вместо "documents"
+    discount_percentage "discount",
     s.total_amount AS "Debet",
     NULL AS "Kredit",  -- вместо 'null "Кредит"'
     'тенге' AS "currency",
-    ua.first_name || '-' || ua.username AS "first_name"  -- убедитесь, что это поле соответствует типу данных модели
+    ua.first_name || '-' || ua.username AS "first_name" 
 FROM sale s 
 JOIN user_account ua ON ua.id = s.client_id
 union all
 select 
     cast(s.created_on as date) AS days,
    'Оплата кассой - № чека ' || COALESCE(s.external_id, s.id::text) AS enumber,
+    discount_percentage "discount",   
    null "Дебет", sp.amount "Кредит",
     'тенге' AS currency,
     first_name || '-' || username
@@ -66,6 +69,7 @@ union all
 SELECT 
     cast(o.created_on as date) AS days,
     'Продажа заявки - № ' || o.id::text AS enumber,
+    discount_percentage,
     o.final_total_amount  "Дебет", null "Кредит",
     'тенге' AS currency,
     first_name || '-' || username
@@ -76,6 +80,7 @@ union all
 SELECT 
     cast(o.created_on as date) AS days,
     'Оплата заявки - № ' || o.id::text AS enumber,
+    discount_percentage,
     null "Дебет", op.amount "Кредит",
     'тенге' AS currency,
     first_name || '-' || username
@@ -87,6 +92,7 @@ union all
 SELECT 
     cast(coalesce(cf.occurred_on, cf.created_on) as date) AS days,
     rpa."name"  AS enumber,
+    null discount_percentage,
     cf.amount  "Дебет", null "Кредит",
     rc."name" AS currency,
     first_name || '-' || username
@@ -99,6 +105,7 @@ union all
 SELECT 
     cast(coalesce(cf.occurred_on, cf.created_on) as date) AS days,
     rpa."name"  AS enumber,
+    null discount_percentage,
     (-1)*cf.amount  "Дебет", null "Кредит",
     rc."name" AS currency,
     first_name || '-' || username
@@ -111,6 +118,7 @@ union all
 SELECT 
     cast(coalesce(cf.occurred_on, cf.created_on) as date) AS days,
     rpa."name"  AS enumber,
+    null discount_percentage,
     null  "Дебет", cf.amount  "Кредит",
     rc."name" AS currency,
     first_name || '-' || username
