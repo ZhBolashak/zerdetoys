@@ -21,6 +21,7 @@ app = Dash(__name__, external_stylesheets=external_stylesheets)
 # ---------Callback для получение списка статей-----------------
 
 def cash_flow_callbacks(app):
+    # Callback для получения списка статей
     @app.callback(
         Output('payment-article-dropdown', 'options'),
         Input('init-particle', 'children')
@@ -29,11 +30,8 @@ def cash_flow_callbacks(app):
         try:
             response = requests.get(f'{BASE_URL}/api/debt/payment_articles_debt')
             if response.status_code == 200:
-                #print("API call successful")
                 payment_articles = response.json()
-                #print("Received data:", payment_articles)
                 options = [{'label': article['ref_payment_article'], 'value': article['id']} for article in payment_articles if article['ref_payment_article'] is not None]
-                #print("Dropdown options:", options)
                 return options
             else:
                 print(f"Failed to fetch articles, status code: {response.status_code}")
@@ -42,10 +40,7 @@ def cash_flow_callbacks(app):
             print(f"Error updating dropdowns: {e}")
             return []
 
-
-
-
-# ---------Callback для получение списка магазинов-----------------
+    # Callback для получения списка магазинов
     @app.callback(
         Output('dropdown-cash-store', 'options'),
         Input('init-cash-store', 'children')
@@ -58,35 +53,31 @@ def cash_flow_callbacks(app):
                 store_options = [{'label': store['name'], 'value': store['id']} for store in stores if store['name'] is not None]
                 return store_options
             else:
-                print(f"Failed to fetch stores, status code: {response_stores.status_code}")  # Добавлено логирование
-                stores = []
-                store_options = []
-            return store_options
+                print(f"Failed to fetch stores, status code: {response_stores.status_code}")
+                return []
         except Exception as e:
-            error_message = f"Error updating dropdowns: {e}"
+            print(f"Error updating dropdowns: {e}")
             return []
 
-
-# ---------Callback для получение списка клиентов-----------------
+    # Callback для получения списка клиентов
     @app.callback(
-        [Output('dropdown-cash-client', 'options')],
-        Input('init-cash-client', 'children')  
+        Output('dropdown-cash-client', 'options'),
+        Input('init-cash-client', 'children')
     )
     def cash_client_options(_):
         try:
             response_clients = requests.get(f'{BASE_URL}/api/debt/clients')
             clients = response_clients.json() if response_clients.status_code == 200 else []
             client_options = [{'label': client['name'], 'value': client['id']} for client in clients if client['name'] is not None]
-            return [client_options] 
+            return client_options
         except Exception as e:
             print(f"Error updating dropdowns: {e}")
             return []
 
-
-# ---------Callback для получение списка кошельков-----------------
+    # Callback для получения списка кошельков
     @app.callback(
-        Output('dropdown-cash-wallet', 'options'), 
-        Input('init-cash-wallet', 'children') 
+        Output('dropdown-cash-wallet', 'options'),
+        Input('init-cash-wallet', 'children')
     )
     def cash_wallet_options(_):
         try:
@@ -102,11 +93,10 @@ def cash_flow_callbacks(app):
             print(f"Error updating dropdowns: {e}")
             return []
 
-
-# ---------Callback для получение списка валют-----------------
+    # Callback для получения списка валют
     @app.callback(
-        Output('dropdown-cash-currency', 'options'),  
-        Input('init-cash-currency', 'children')  
+        Output('dropdown-cash-currency', 'options'),
+        Input('init-cash-currency', 'children')
     )
     def cash_currency_options(_):
         try:
@@ -122,8 +112,7 @@ def cash_flow_callbacks(app):
             print(f"Error updating dropdowns: {e}")
             return []
 
-
-# ---------Callback для получение даты-----------------
+    # Callback для обновления даты
     @app.callback(
         Output('output-container-date-picker-single', 'children'),
         Input('single-date-picker', 'date')
@@ -131,13 +120,12 @@ def cash_flow_callbacks(app):
     def update_output(date):
         if date is not None:
             # Преобразуем строку даты в объект datetime
-            date_object = date.fromisoformat(date)
+            date_object = pd.to_datetime(date)
             # Форматируем дату, чтобы она была понятна пользователю
             date_string = date_object.strftime('%B %d, %Y')
             return 'Вы выбрали следующую дату: {}'.format(date_string)
-        
 
-# ---------Callback для получение суммы ввода-----------------
+    # Callback для обновления суммы ввода
     @app.callback(
         Output('output-container-amount', 'children'),
         Input('input-amount', 'value')
@@ -151,82 +139,76 @@ def cash_flow_callbacks(app):
             except ValueError:
                 return 'Пожалуйста, введите число'
 
-
-# ---------Callback для записи полученных данных в базу-----------------
+    # Объединенный callback для записи данных в базу и обновления таблицы
     @app.callback(
         Output('submission-status', 'children'),
+        Output('cash-flow-debt-output', 'children'),
         Input('submit-button', 'n_clicks'),
-        [
-            State('input-amount', 'value'),
-            State('dropdown-cash-client', 'value'),
-            State('dropdown-cash-wallet', 'value'),
-            State('dropdown-cash-currency', 'value'),
-            State('payment-article-dropdown', 'value'),
-            State('dropdown-cash-store', 'value'),
-            State('single-date-picker', 'date'),
-        ],
+        Input('init_cash_flow_debt', 'n_intervals'),
+        State('input-amount', 'value'),
+        State('dropdown-cash-client', 'value'),
+        State('dropdown-cash-wallet', 'value'),
+        State('dropdown-cash-currency', 'value'),
+        State('payment-article-dropdown', 'value'),
+        State('dropdown-cash-store', 'value'),
+        State('single-date-picker', 'date'),
         prevent_initial_call=True,
     )
-    def submit_to_api(n_clicks, amount, client_id, wallet_id, currency_id, article_id, store_id, date):
-        if n_clicks: 
-
-            cash_flow_data = {
-                'amount': amount,
-                'client_id': client_id,
-                'currency_id': currency_id,
-                'payment_article_id': article_id,
-                'wallet_type_id': wallet_id,
-                'occurred_on': date,
-                'store_id': store_id
-            }
-
-            print("Отправляемые данные:", cash_flow_data) 
-
-            response = requests.post(
-                f'{BASE_URL}/api/dds/cash_flow',
-                json=cash_flow_data,
-                headers={'Content-Type': 'application/json'}
-            )
-
-            print("Статус ответа:", response.status_code) 
-            print("Тело ответа:", response.text) 
-
-            if response.status_code == 200:
-                return "Данные успешно отправлены."
-            else:
-                return f"Ошибка при отправке данных: {response.text}"
-        else:
-            raise PreventUpdate
+    def update_content(n_clicks, n_intervals, amount, client_id, wallet_id, currency_id, article_id, store_id, date):
+        ctx = callback_context
+        triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
         
-#---------------------посаженные данные по дебиторке---------------------------
+        status_message = no_update
+        if triggered_id == 'submit-button':
+            if n_clicks:
+                cash_flow_data = {
+                    'amount': amount,
+                    'client_id': client_id,
+                    'currency_id': currency_id,
+                    'payment_article_id': article_id,
+                    'wallet_type_id': wallet_id,
+                    'occurred_on': date,
+                    'store_id': store_id
+                }
 
+                print("Отправляемые данные:", cash_flow_data)
 
-    @app.callback(
-        Output('cash-flow-debt-output', 'children'),
-        Input('init_cash_flow_debt', 'n_intervals')  # Изменение на n_intervals для автоматического вызова
-    )
-    def load_cash_flow_data(_):
+                response = requests.post(
+                    f'{BASE_URL}/api/dds/cash_flow',
+                    json=cash_flow_data,
+                    headers={'Content-Type': 'application/json'}
+                )
+
+                print("Статус ответа:", response.status_code)
+                print("Тело ответа:", response.text)
+
+                if response.status_code == 200:
+                    status_message = "Данные успешно отправлены."
+                else:
+                    status_message = f"Ошибка при отправке данных: {response.text}"
+            else:
+                raise PreventUpdate
+
+        # Обработка обновления таблицы
         try:
             response = requests.get(f'{BASE_URL}/api/debt/cash_flow_debt')
             if response.status_code == 200:
                 cash_flow_data = response.json()
-                #print("Received data from API:", cash_flow_data)
+                print("Received data from API:", cash_flow_data)
             else:
-                return html.Div(f"Ошибка при получении данных: {response.status_code}")
+                return status_message, html.Div(f"Ошибка при получении данных: {response.status_code}")
 
             if not cash_flow_data:
-                return html.Div("Нет данных по выбранным критериям.")
+                return status_message, html.Div("Нет данных по выбранным критериям.")
 
-            # Создание DataFrame из полученных данных
             df = pd.DataFrame(cash_flow_data)
-            #print("DataFrame created:", df)
+            print("DataFrame created:", df)
 
-            # Создание таблицы HTML
             table_header = [html.Thead(html.Tr([html.Th(col) for col in df.columns]))]
             table_body = [html.Tbody([html.Tr([html.Td(df.iloc[i][col]) for col in df.columns]) for i in range(len(df))])]
             table = dbc.Table(table_header + table_body, bordered=True, striped=True, hover=True)
 
-            return table
+            return status_message, table
         except Exception as e:
             print(f"Error loading cash flow data: {e}")
-            return html.Div(f"Error: {str(e)}")
+            return status_message, html.Div(f"Error: {str(e)}")

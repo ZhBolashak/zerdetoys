@@ -1,5 +1,4 @@
-#layout_debt.py
-from dash import  dcc, html
+from dash import dcc, html
 import dash_bootstrap_components as dbc
 
 # Функция для получения лэйаута для страницы ДДС
@@ -16,6 +15,9 @@ def debt_get_layout():
             ))
         ]),
         dbc.Row(dbc.Col(dbc.Button('Получить отчет', id='get-debt-button', n_clicks=0, color='primary', className='me-1'))),
+        dbc.Row(dbc.Col(dbc.Button('Сохранить в Excel', id='download-excel-button', n_clicks=0, color='secondary', className='me-1'))),
+        dbc.Row(dbc.Col(dcc.Download(id="download-excel_debt"))),
         dbc.Row(dbc.Col(html.Div(id='report-debt-output'))),
-        html.Div(id='init_debt', style={'display': 'none'})
+        html.Div(id='init_debt', style={'display': 'none'}),
+        dcc.Store(id='debt-data')  # Добавляем Store для хранения данных
     ])
