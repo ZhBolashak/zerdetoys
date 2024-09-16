@@ -20,6 +20,7 @@ def sidebar_layout():
                     dbc.NavLink("Движение средств:Дебиторка", href="/cashflow", active="exact"),
                     dbc.NavLink("Движение средств:Кредиторка", href="/credit", active="exact"),
                     dbc.NavLink("Движение средств:Расходы", href="/cash_flow_costs", active="exact"),
+                    dbc.NavLink("Заяки по продукту", href="/orders", active="exact"),
                     
                 ],
                 vertical=True,

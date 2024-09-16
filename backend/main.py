@@ -5,6 +5,7 @@ from backend.sale_endpoints import sales_router
 from backend.debt_endpoints import debt_router
 from backend.cash_flow_costs import costs_router
 from backend.credit_endpoints import credit_router
+from backend.product_sale import productorder_router
 
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -22,6 +23,7 @@ app.include_router(sales_router, prefix="/api/dds", tags=["ДДС"])
 app.include_router(debt_router, prefix="/api/debt", tags=["Дебиторка"])
 app.include_router(credit_router, prefix="/api/credits", tags=["Кредиторка"])
 app.include_router(costs_router, prefix="/api/costs", tags=["Расходы"])
+app.include_router(productorder_router, prefix="/api/orders", tags=["Заявки"])
 
 
 
